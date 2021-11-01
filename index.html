@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>page scroll</title>
+  <style>
+    *{
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      overflow: hidden;
+    }
+    #wrap {
+      overflow: hidden;
+      transition: 1s;
+    }
+    section{
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    section h1{
+      font-size: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div id="wrap">
+    <section class="panel" style="background-color: rgb(138, 55, 55);">
+      <h1>1</h1>
+    </section>
+    <section class="panel" style="background-color: rgb(177, 125, 28);">
+      <h1>2</h1>
+    </section>
+    <section class="panel" style="background-color: rgb(49, 112, 57);">
+      <h1>3</h1>
+    </section>
+    <section class="panel" style="background-color: rgb(75, 96, 139);">
+      <h1>4</h1>
+    </section>
+  </div>
+
+  <script>
+    const bodyObj = document.querySelector('#wrap');
+    const panelLength = document.querySelectorAll('.panel').length;
+
+    // 스크롤 방향
+    let direction;
+
+    // 이 hold가 true인 동안에는 transform 하지않음.
+    let hold = false;
+
+
+    function scrollEvent(obj) {
+      /* scrollHeight는 현재 스크롤(패널)의 위치(vh값)
+       * panelsHeight는 전체(wrap)의 높이값(vh)
+       * panel은 전체를 감싸고 있는 div#wrap
+       * */
+      let scrollHeight, panelsHeight, panel;
+      let vh = window.innerHeight / 100;
+      if (this.id === 'wrap' || obj.id === 'wrap') {
+        panel = this || obj;
+        panelsHeight = Math.round(panel.offsetHeight / vh);
+        console.log(panelsHeight);
+      }
+
+      /*
+       * 현재 div#wrap 의 css transform: translateY()값을 읽어와서 변수로 저장.
+       * replace로 글자를 지운 다음 숫자로 변환
+       * */
+      scrollHeight = parseInt(panel.style.transform.replace('translateY(',''));
+
+      /*
+       * 맨 처음 translateY값은 0임. (1번 패널 보이는 상태)
+       *
+       * 스크롤을 위로 올리면 (else if direction === 'up')
+       * 현재 translateY값이 0이면 맨 위에 있는 상태이므로 더 올라가면 안됨.
+       * 그래서 현재 translateY값이 0보다 작을때 라는 조건 추가.
+       * translateY값이 0보다 작으면 translateY를 100vh 만큼 올린다.
+       *
+       *
+       * 스크롤을 아래로 내리면 (if direction === 'down')
+       * 현재 translateY 값이 div#wrap 길이를 넘어가면 안되니까
+       * Math.abs(scrollHeight) < (panelLength-1)*100
+       * 도 조건에 추가해준다.
+       * 만약 translateY가 전체 길이를 안넘었다면
+       * translateY를 -100vh 만큼 한다.
+       *
+       */
+      if (direction === 'down' && Math.abs(scrollHeight) < (panelLength-1)*100 ) {
+        scrollHeight = scrollHeight - 100;
+      } else if (direction === 'up' && scrollHeight < 0) {
+        scrollHeight = scrollHeight + 100;
+      } else if (direction === 'top') {
+        scrollHeight = 0;
+      }
+
+      /*
+       * hold가 false라면
+       * hold를 true로 바꾸고 css transform: translateY() 처리 해준다음
+       * 1초 뒤에 다시 hold를 false로 풀어준다.
+       */
+      if (hold === false) {
+        hold = true;
+        panel.style.transform = `translateY(${scrollHeight}vh)`;
+        setTimeout(function () {hold = false;}, 1000);
+      }
+      console.log(`방향 : ${direction}`)
+      console.log(`translateY값 : ${scrollHeight}`)
+      console.log(`div#wrap의 길이 : ${panelsHeight}`)
+    }
+    bodyObj.addEventListener('wheel', function(e) {
+      if (e.deltaY < 0)
+        direction = 'up';
+      if (e.deltaY > 0)
+        direction = 'down';
+      e.stopPropagation();
+    });
+
+    // translateY 초기값 세팅
+    bodyObj.style.transform = `translateY(0)`;
+    bodyObj.addEventListener('wheel', scrollEvent);
+  </script>
+</body>
+</html>
